@@ -1,5 +1,7 @@
 #pragma once
 
+#include "imgui/imgui.h"
+
 #include <string>
 #include <vector>
 #include <array>
@@ -8,7 +10,6 @@
 #include <unordered_map>
 #include <map>
 #include <regex>
-#include "imgui.h"
 
 class TextEditor
 {

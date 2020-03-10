@@ -7,7 +7,7 @@
 #include "TextEditor.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui.h" // for imGui::GetCurrentWindow()
+#include "imgui/imgui.h" // for imGui::GetCurrentWindow()
 
 // TODO
 // - multiline comments vs single-line: latter is blocking start of a ML
@@ -46,7 +46,7 @@ TextEditor::TextEditor()
 	, mHandleKeyboardInputs(true)
 	, mHandleMouseInputs(true)
 	, mIgnoreImGuiChild(false)
-	, mShowWhitespaces(true)
+	, mShowWhitespaces(false)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
 	SetPalette(GetDarkPalette());
@@ -706,7 +706,7 @@ void TextEditor::HandleKeyboardInputs()
 	{
 		if (ImGui::IsWindowHovered())
 			ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput);
-		//ImGui::CaptureKeyboardFromApp(true);
+		ImGui::CaptureKeyboardFromApp(true);
 
 		io.WantCaptureKeyboard = true;
 		io.WantTextInput = true;
@@ -889,6 +889,7 @@ void TextEditor::Render()
 	char buf[16];
 	snprintf(buf, 16, " %d ", globalLineMax);
 	mTextStart = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x + mLeftMargin;
+    mTextStart = 4;
 
 	if (!mLines.empty())
 	{
@@ -920,13 +921,13 @@ void TextEditor::Render()
 
 			if (sstart != -1 && ssend != -1 && sstart < ssend)
 			{
-				ImVec2 vstart(lineStartScreenPos.x + mTextStart + sstart, lineStartScreenPos.y);
-				ImVec2 vend(lineStartScreenPos.x + mTextStart + ssend, lineStartScreenPos.y + mCharAdvance.y);
+				ImVec2 vstart(lineStartScreenPos.x + mTextStart + sstart + 1, lineStartScreenPos.y);
+				ImVec2 vend(lineStartScreenPos.x + mTextStart + ssend, lineStartScreenPos.y + mCharAdvance.y - 1);
 				drawList->AddRectFilled(vstart, vend, mPalette[(int)PaletteIndex::Selection]);
 			}
 
 			// Draw breakpoints
-			auto start = ImVec2(lineStartScreenPos.x + scrollX, lineStartScreenPos.y);
+			auto start = ImVec2(lineStartScreenPos.x + scrollX + 4, lineStartScreenPos.y);
 
 			if (mBreakpoints.count(lineNo + 1) != 0)
 			{
@@ -969,8 +970,9 @@ void TextEditor::Render()
 				if (!HasSelection())
 				{
 					auto end = ImVec2(start.x + contentSize.x + scrollX, start.y + mCharAdvance.y);
-					drawList->AddRectFilled(start, end, mPalette[(int)(focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
-					drawList->AddRect(start, end, mPalette[(int)PaletteIndex::CurrentLineEdge], 1.0f);
+                    drawList->AddRect(start, end, mPalette[(int)PaletteIndex::CurrentLineEdge]);
+					//drawList->AddRectFilled(start, end, mPalette[(int)(focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
+					//drawList->AddRect(start, end, mPalette[(int)PaletteIndex::CurrentLineEdge], 1.0f);
 				}
 
 				// Render the cursor
@@ -1000,8 +1002,8 @@ void TextEditor::Render()
 								width = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf2).x;
 							}
 						}
-						ImVec2 cstart(textScreenPos.x + cx, lineStartScreenPos.y);
-						ImVec2 cend(textScreenPos.x + cx + width, lineStartScreenPos.y + mCharAdvance.y);
+						ImVec2 cstart(textScreenPos.x + cx + 1, lineStartScreenPos.y);
+						ImVec2 cend(textScreenPos.x + cx + width, lineStartScreenPos.y + mCharAdvance.y - 1);
 						drawList->AddRectFilled(cstart, cend, mPalette[(int)PaletteIndex::Cursor]);
 						if (elapsed > 800)
 							mStartTime = timeEnd;
@@ -1127,7 +1129,7 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(mPalette[(int)PaletteIndex::Background]));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 	if (!mIgnoreImGuiChild)
-		ImGui::BeginChild(aTitle, aSize, aBorder, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_NoMove);
+		ImGui::BeginChild(aTitle, aSize, aBorder, ImGuiWindowFlags_NoMove);
 
 	if (mHandleKeyboardInputs)
 	{
