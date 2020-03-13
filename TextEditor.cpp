@@ -3160,3 +3160,153 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Lua()
 	}
 	return langDef;
 }
+
+const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::WTF()
+{
+	static bool inited = false;
+	static LanguageDefinition langDef;
+	if (!inited)
+	{
+		static const char* const keywords[] = {
+            "true",
+            "false",
+		};
+
+		for (auto& k : keywords) {
+			langDef.mKeywords.insert(k);
+        }
+
+        static const char* const modules[] = {
+            "arpansagovau",
+            "azuredevops",
+            "bamboohr",
+            "buildkite",
+            "circleci",
+            "clocks",
+            "cmdrunner",
+            "datadog",
+            "digitalclock",
+            "digitalocean",
+            "docker",
+            "exchangerates",
+            "feedreader",
+            "football",
+            "gerrit",
+            "git",
+            "github",
+            "gitlab",
+            "gitter",
+            "hackernews",
+            "hibp",
+            "ipinfo",
+            "jenkins",
+            "jira",
+            "kubernetes",
+            "logger",
+            "mercurial",
+            "nbascore",
+            "newrelic",
+            "opsgenie",
+            "pagerduty",
+            "power",
+            "prettyweather",
+            "resourceusage",
+            "rollbar",
+            "security",
+            "spotify",
+            "subreddit",
+            "textfile",
+            "todo",
+            "todoist",
+            "transmission",
+            "travisci",
+            "trello",
+            "twitter",
+            "twitterstats",
+            "victorops",
+            "weather",
+            "zendesk",
+        };
+
+		for (auto& m : modules) {
+			Identifier id;
+			id.mDeclaration = "Module ";
+			langDef.mIdentifiers.insert(std::make_pair(std::string(m), id));
+		}
+
+		static const char* const identifiers[] = {
+            "apiID",
+            "apiKey",
+            "apiKey",
+            "apiToken",
+            "bearerToken",
+            "branches",
+            "city",
+            "cityids",
+            "colors",
+            "count",
+            "enabled",
+            "focusable",
+            "language",
+            "locationid",
+            "locations",
+            "numberOfArticles",
+            "numberOfPosts",
+            "numberOfStories",
+            "numberOfStories",
+            "organizationSlug",
+            "pipelines",
+            "position",
+            "rates",
+            "refreshInterval",
+            "screenName",
+            "sort",
+            "team",
+            "tempUnit",
+            "title",
+            "type",
+            "view",
+            "sortOrder",
+            "topTimePeriod",
+            "storyType",
+            "cmd",
+            "args",
+            "unit",
+            "commitCount",
+            "commitFormat",
+            "dateFormat",
+            "repositories",
+            "baseURL",
+            "customQueries",
+            "enableStatus",
+            "uploadURL",
+            "username",
+		};
+
+		for (auto& k : identifiers) {
+			Identifier id;
+			id.mDeclaration = "Parameter ";
+			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
+		}
+
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\\'[^\\\']*\\\'", PaletteIndex::String));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::Number));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::Number));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
+
+		langDef.mCommentStart = "[###";
+		langDef.mCommentEnd = "###]";
+		langDef.mSingleLineComment = "#";
+
+		langDef.mCaseSensitive = true;
+		langDef.mAutoIndentation = false;
+
+		langDef.mName = "Lua";
+
+		inited = true;
+	}
+	return langDef;
+}
