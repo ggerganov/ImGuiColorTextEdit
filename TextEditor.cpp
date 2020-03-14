@@ -27,7 +27,7 @@ bool equals(InputIt1 first1, InputIt1 last1,
 TextEditor::TextEditor()
 	: mLineSpacing(1.0f)
 	, mUndoIndex(0)
-	, mTabSize(4)
+	, mTabSize(2)
 	, mOverwrite(false)
 	, mReadOnly(false)
 	, mWithinRender(false)
@@ -47,6 +47,8 @@ TextEditor::TextEditor()
 	, mHandleMouseInputs(true)
 	, mIgnoreImGuiChild(false)
 	, mShowWhitespaces(false)
+	, mFocus(false)
+	, mFocused(false)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
 	SetPalette(GetDarkPalette());
@@ -704,6 +706,7 @@ void TextEditor::HandleKeyboardInputs()
 
 	if (ImGui::IsWindowFocused())
 	{
+        mFocused = true;
 		if (ImGui::IsWindowHovered())
 			ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput);
 		ImGui::CaptureKeyboardFromApp(true);
@@ -759,8 +762,11 @@ void TextEditor::HandleKeyboardInputs()
 			SelectAll();
 		else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)))
 			EnterCharacter('\n', false);
-		else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Tab)))
-			EnterCharacter('\t', shift);
+		else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Tab))) {
+            ImGui::SetWindowFocus(nullptr);
+            mFocused = false;
+        }
+			//EnterCharacter('\t', shift);
 
 		if (!IsReadOnly() && !io.InputQueueCharacters.empty())
 		{
@@ -772,7 +778,9 @@ void TextEditor::HandleKeyboardInputs()
 			}
 			io.InputQueueCharacters.resize(0);
 		}
-	}
+	} else {
+        mFocused = false;
+    }
 }
 
 void TextEditor::HandleMouseInputs()
@@ -969,9 +977,9 @@ void TextEditor::Render()
 				// Highlight the current line (where the cursor is)
 				if (!HasSelection())
 				{
-					auto end = ImVec2(start.x + contentSize.x + scrollX, start.y + mCharAdvance.y);
-                    drawList->AddRect(start, end, mPalette[(int)PaletteIndex::CurrentLineEdge]);
-					//drawList->AddRectFilled(start, end, mPalette[(int)(focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
+					auto end = ImVec2(start.x + contentSize.x + scrollX, start.y + mCharAdvance.y - 0.1f);
+                    //drawList->AddRect(start, end, mPalette[(int)PaletteIndex::CurrentLineEdge]);
+					drawList->AddRectFilled(start, end, mPalette[(int)(focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
 					//drawList->AddRect(start, end, mPalette[(int)PaletteIndex::CurrentLineEdge], 1.0f);
 				}
 
@@ -1126,10 +1134,16 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
 	mTextChanged = false;
 	mCursorPositionChanged = false;
 
+    if (mFocus) {
+        ImGui::SetNextWindowFocus();
+        mFocus = false;
+    }
+
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(mPalette[(int)PaletteIndex::Background]));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-	if (!mIgnoreImGuiChild)
+	if (!mIgnoreImGuiChild) {
 		ImGui::BeginChild(aTitle, aSize, aBorder, ImGuiWindowFlags_NoMove);
+    }
 
 	if (mHandleKeyboardInputs)
 	{
@@ -2082,8 +2096,8 @@ const TextEditor::Palette & TextEditor::GetRetroBluePalette()
 			0xa00000ff, // ErrorMarker
 			0x80ff8000, // Breakpoint
 			0xff808000, // Line number
-			0x40000000, // Current line fill
-			0x40808080, // Current line fill (inactive)
+			0x40808080, // Current line fill
+			0x40000000, // Current line fill (inactive)
 			0x40000000, // Current line edge
 		} };
 	return p;
